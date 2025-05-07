@@ -1,0 +1,56 @@
+#!/bin/sh
+
+# Use neovim for vim if present.
+[ -x "$(command -v nvim)" ] && alias vim="nvim" vimdiff="nvim -d"
+
+# sudo not required for some system commands
+for command in mount umount sv pacman updatedb su shutdown poweroff reboot ; do
+    alias $command="sudo $command"
+done; unset command
+
+se() {
+    choice="$(find ~/.local/bin -mindepth 1 -printf '%P\n' | fzf)"
+    [ -f "$HOME/.local/bin/$choice" ] && $EDITOR "$HOME/.local/bin/$choice"
+}
+
+# program
+alias \
+    z='zathura' \
+    m='mupdf' \
+    t='tmux' \
+    y='yazi' \
+    sdn="shutdown -h now" \
+    e="$EDITOR" \
+    v="$EDITOR" \
+    p="paru" \
+    pu="paru -Syu" \
+
+# Colorize commands when possible.
+alias \
+	ls="ls -hN --color=auto --group-directories-first" \
+	grep="grep --color=auto" \
+	diff="diff --color=auto" \
+	ip="ip -color=auto" \
+    l="ls -lah" \
+    sz="setsid -f zathura" \
+
+# yt-dlp
+alias \
+    ytbdl="youtube-dl -f bestvideo+bestaudio -o '%(title)s.%(ext)s' --external-downloader=aria2c" \
+    ytadl="youtube-dl -x -f bestaudio -o '%(title)s.%(ext)s' --external-downloader=aria2c" \
+    ytdl="youtube-dl -f best -o '%(title)s.%(ext)s' --external-downloader=aria2c" \
+    ytpdl="youtube-dl -f best -o '%(playlist_index)s. %(title)s.%(ext)s' --external-downloader=aria2c" \
+    ytapdl="youtube-dl -f bestaudio -o '%(title)s.%(ext)s' --external-downloader=aria2c"
+
+# repo
+alias dots='/usr/bin/git --git-dir=$HOME/.dotfiles/ --work-tree=$HOME'
+
+# terminal
+alias hst="history 1 -1 | cut -c 8- | sort | uniq | fzf | tr -d '\n' | xclip -sel c"
+
+# hard-drive
+alias \
+    hd='/run/media/grishma/E27AFFE97AFFB87D' \
+    mnt='udisksctl mount -b /dev/sda2' \
+    unmnt='udisksctl unmount -b /dev/sda2' \
+    hdfix='sudo ntfsfix -d /dev/sda2'

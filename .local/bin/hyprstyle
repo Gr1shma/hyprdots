@@ -1,0 +1,88 @@
+#!/bin/bash
+
+WALLPAPER_DIR=~/pix/wallpaper
+MONITOR="eDP-1"
+WALLPAPER="$1"
+
+start_hyprpaper() {
+    if ! pgrep -x "hyprpaper" > /dev/null 2>&1; then
+        echo "Hyprpaper is not running. Starting it..."
+        hyprpaper &>/dev/null &
+        sleep 2
+    fi
+}
+
+choose_random_wallpaper() {
+    echo "No wallpaper specified. Picking a random one from $WALLPAPER_DIR..."
+    WALLPAPER=$(find "$WALLPAPER_DIR" -type f \( -iname '*.jpg' -o -iname '*.png' -o -iname '*.jpeg' \) | shuf -n 1)
+
+    if [[ -z "$WALLPAPER" ]]; then
+        echo "Error: No wallpapers found in $WALLPAPER_DIR"
+        exit 1
+    fi
+}
+
+set_wallpaper() {
+    local wallpaper="$1"
+
+    if [[ ! -f "$wallpaper" ]]; then
+        echo "Error: file not found -> $wallpaper"
+        exit 1
+    fi
+
+    hyprctl hyprpaper preload "$wallpaper" &>/dev/null
+    sleep 0.5
+    hyprctl hyprpaper wallpaper "$MONITOR,$wallpaper" &>/dev/null
+
+    echo "Wallpaper set: $wallpaper"
+}
+
+apply_theme() {
+    local wallpaper="$1"
+    echo "Applying theme based on $wallpaper..."
+    wal -i "$wallpaper" --saturate 0.7 &>/dev/null
+
+    # Link pywal colors to wofi and waybar
+    ln -sf "$HOME/.cache/wal/colors-waybar.css" "$HOME/.config/waybar/colors-waybar.css" &>/dev/null
+    ln -sf "$HOME/.cache/wal/colors.css" "$HOME/.config/wofi/colors-waybar.css" &>/dev/null
+
+    # Reload Waybar (if running)
+    if pgrep -x "waybar" > /dev/null 2>&1; then
+        pkill waybar &>/dev/null && waybar &>/dev/null &
+    fi
+
+    echo "Reloaded Waybar and applied Wofi colors."
+
+    apply_hyprland_borders
+}
+
+apply_hyprland_borders() {
+    if [[ -f "$HOME/.cache/wal/colors.json" ]]; then
+        color1=$(jq -r '.colors.color1' "$HOME/.cache/wal/colors.json")
+        color2=$(jq -r '.colors.color2' "$HOME/.cache/wal/colors.json")
+        inactive=$(jq -r '.colors.color0' "$HOME/.cache/wal/colors.json")
+
+        echo "Setting Hyprland border colors..."
+        # Apply gradient for active border
+        hyprctl keyword general:col.active_border "rgba(${color1:1}ee) rgba(${color2:1}ee) 45deg" &>/dev/null
+
+        # Apply solid inactive border
+        hyprctl keyword general:col.inactive_border "rgba(${inactive:1}aa)" &>/dev/null
+    else
+        echo "Error: colors.json not found. Can't set Hyprland border colors."
+    fi
+}
+
+# Main
+if [[ -z "$WALLPAPER" ]]; then
+    choose_random_wallpaper
+else
+    if [[ ! -f "$WALLPAPER" ]]; then
+        echo "Error: file not found -> $WALLPAPER"
+        exit 1
+    fi
+fi
+
+start_hyprpaper
+set_wallpaper "$WALLPAPER"
+apply_theme "$WALLPAPER"
