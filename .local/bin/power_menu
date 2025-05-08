@@ -1,11 +1,18 @@
-#! /bin/sh
+#!/usr/bin/env bash
 
-chosen=$(printf "  Power Off\n  Restart\n  Suspend\n  Lock" | wofi -dmenu -i)
+op=$(echo -e " Poweroff\n Reboot\n Lock\n Logout" | wofi -i --dmenu | awk '{print tolower($2)}')
 
-case "$chosen" in
-	"  Power Off") poweroff ;;
-	"  Restart") reboot ;;
-	"  Suspend") systemctl suspend-then-hibernate ;;
-	"  Lock") betterlockscreen -l ;;
-	*) exit 1 ;;
+case $op in 
+    poweroff)
+        systemctl poweroff
+        ;;
+    reboot)
+        systemctl reboot
+        ;;
+    lock)
+        hyprlock
+        ;;
+    logout)
+        hyprctl dispatch exit
+        ;;
 esac

@@ -49,5 +49,5 @@
         "format-source-muted": "",
         "on-click": "ghostty -e zsh -ic pulsemixer",
         "scroll-step": 5,
-    }
+    },
 }

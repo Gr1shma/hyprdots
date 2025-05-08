@@ -1,7 +1,7 @@
 #!/bin/bash
 
 rs="$(find /home/grishma/dox/abstract -follow -printf "%T@ %Tc %p\n" | sort -n -r | cut -c84- | grep -E '.md$' | grep -v 'template')"
-rcv=$(echo "$rs" | wofi -dmenu)
+rcv=$(echo "$rs" | wofi -i --dmenu)
 if [[ "$rcv" == "" ]]; then exit 1; fi
 if [[ $(echo "$rs" | grep "$rcv") ]]; then
     note_file="~/dox/abstract/$rcv"
