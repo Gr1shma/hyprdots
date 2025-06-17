@@ -3,7 +3,7 @@
 while read file
 do
   case "$1" in
-    "w") set_wallpaper "$file" ;;
+    "w") hyprstyle "$file" ;;
     "d") rm "$file";;
   esac
 done

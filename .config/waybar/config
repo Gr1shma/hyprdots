@@ -2,7 +2,7 @@
     "position": "top",
     "height": 32,
     "modules-left": ["hyprland/workspaces"],
-    "modules-right": ["pulseaudio", "cpu", "memory", "battery", "network", "clock" ,"tray"],
+    "modules-right": ["pulseaudio", "backlight", "cpu", "memory", "battery", "network", "clock" ,"tray"],
     "tray": {
         "spacing": 10
     },
@@ -47,7 +47,15 @@
         "format-muted": " / {format_source}",
         "format-source": " {volume}%",
         "format-source-muted": "",
-        "on-click": "ghostty -e zsh -ic pulsemixer",
+        "on-click": "foot -T pulsemixer zsh -ic pulsemixer",
         "scroll-step": 5,
+    },
+    "backlight": {
+        "device": "intel_backlight", // or "amdgpu_bl0", "acpi_video0", etc.
+        "format": " {icon} ",
+        "format-icons": ["󰃞", "󰃟", "󰃠"],
+        "on-scroll-up": "brightnessctl set 5%+",
+        "on-scroll-down": "brightnessctl set 5%-",
+        "tooltip": false,
     },
 }

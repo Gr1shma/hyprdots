@@ -22,6 +22,7 @@ window#waybar {
 #cpu,
 #memory,
 #battery,
+#backlight,
 #network,
 #clock,
 #tray {
@@ -36,6 +37,7 @@ window#waybar {
 /* Hover Effect */
 #workspaces:hover,
 #pulseaudio:hover,
+#backlight:hover
 #cpu:hover,
 #memory:hover,
 #battery:hover,
@@ -121,7 +123,7 @@ window#waybar {
 }
 
 /* PulseAudio */
-#pulseaudio {
+#pulseaudio, #backlight {
     background: @color0;
     color: @foreground;
 }

@@ -29,10 +29,14 @@ alias yarn='yarn --use-yarnrc "$XDG_CONFIG_HOME/yarn/config"'
 
 export BUN_INSTALL="$HOME/.bun" 
 export PATH="$BUN_INSTALL/bin:$PATH"
+export PATH="$PATH:$GOPATH/bin"
 
 export PATH=$PATH:$HOME/.local/bin
 
 export QT_QPA_PLATFORMTHEME=gtk2
+
+# Mpd daemon start
+[ ! -s ~/.config/mpd/pid ] && mpd
 
 # Starting X
 if [ -z "${DISPLAY}" ] && [ "${XDG_VTNR}" -eq 1 ]; then
