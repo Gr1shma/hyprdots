@@ -1,16 +1,29 @@
 {
     "position": "top",
     "height": 32,
-    "modules-left": ["hyprland/workspaces"],
-    "modules-right": ["pulseaudio", "backlight", "cpu", "memory", "battery", "network", "clock" ,"tray"],
+    "modules-left": [
+        "hyprland/workspaces"
+    ],
+    "modules-center": [
+        "clock"
+    ],
+    "modules-right": [
+        "pulseaudio",
+        "backlight",
+        "cpu",
+        "memory",
+        "battery",
+        "network",
+        "tray"
+    ],
     "tray": {
         "spacing": 10
     },
     "clock": {
-    	"interval": 1,
-    	"timezone": "Asia/Kathmandu",
-    	"format": " {:%a %d %b   %I:%M %p}",
-    	"tooltip": false,
+        "interval": 1,
+        "timezone": "Asia/Kathmandu",
+        "format": " {:%a %d %b   %I:%M %p}",
+        "tooltip": false
     },
     "cpu": {
         "format": " {usage}%",
@@ -30,7 +43,13 @@
         "format-charging": "{icon} {capacity}%",
         "format-plugged": "{icon} {capacity}%",
         "format-alt": "{time}",
-        "format-icons": ["", "", "", "", ""],
+        "format-icons": [
+            "",
+            "",
+            "",
+            "",
+            ""
+        ],
         "tooltip": false
     },
     "network": {
@@ -41,21 +60,20 @@
         "tooltip": false
     },
     "pulseaudio": {
-        "format": " {volume}% / {format_source}",
-        "format-bluetooth": " {volume}% / {format_source}",
-        "format-bluetooth-muted": " / {format_source}",
-        "format-muted": " / {format_source}",
-        "format-source": " {volume}%",
-        "format-source-muted": "",
+        "format": " {volume}%",
         "on-click": "foot -T pulsemixer zsh -ic pulsemixer",
-        "scroll-step": 5,
+        "scroll-step": 5
     },
     "backlight": {
-        "device": "intel_backlight", // or "amdgpu_bl0", "acpi_video0", etc.
+        "device": "intel_backlight",
         "format": " {icon} ",
-        "format-icons": ["󰃞", "󰃟", "󰃠"],
+        "format-icons": [
+            "󰃞",
+            "󰃟",
+            "󰃠"
+        ],
         "on-scroll-up": "brightnessctl set 5%+",
         "on-scroll-down": "brightnessctl set 5%-",
-        "tooltip": false,
-    },
+        "tooltip": false
+    }
 }

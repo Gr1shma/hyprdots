@@ -12,7 +12,7 @@ elif [[ "$connected" =~ "disabled" ]]; then
 fi
 
 # Use wofi to select the Wi-Fi network
-chosen_network=$(echo -e "$toggle\n$wifi_list" | uniq -u | wofi -dmenu -i -selected-row 1 -p "Wi-Fi SSID: ")
+chosen_network=$(echo -e "$toggle\n$wifi_list" | uniq -u | wofi --dmenu -i -selected-row 1)
 
 # Get the network name by stripping the icons (optional)
 chosen_id=$(echo "${chosen_network:3}" | xargs)

@@ -1,21 +1,17 @@
 @import "../waybar/colors-waybar.css";
 
-/* 🔹 Window */
 #window {
-    border: 2px solid rgba(--wofi-rgb-color1, 0.9);
-    background-color: rgba(--wofi-rgb-color0, 0.95);
+    background-color: rgba(--wofi-rgb-color0, 0.6);
     font-size: 15px;
-    font-weight: bold;
+    font-weight: 500;
     font-family: "Fira Code";
     padding: 5px;
 }
 
-/* 🔹 Outer Box (Margins & Spacing) */
 #outer-box {
     margin: 4px;
 }
 
-/* 🔹 Input Box */
 #input {
     border: none;
     background-color: transparent;
@@ -25,41 +21,35 @@
     padding: 4px;
 }
 
-/* 🔹 Input Icon Adjustments */
 #input image:first-child {
     margin-left: -80px;
 }
+
 #input image:last-child {
     margin-right: -80px;
 }
 
-/* 🔹 Entry (Normal State) */
 #entry {
     background: transparent;
     color: --wofi-color7;
     padding: 5px;
-    border-radius: 4px;
+    border: none;
 }
 
-/* 🔹 Entry (Hover & Selected State) */
 #entry:selected {
-    background-color: rgba(--wofi-rgb-color1, 0.85);
+    background-color: rgba(--wofi-rgb-color8, 0.4);
     color: --wofi-color0;
-    box-shadow: 0px 0px 5px rgba(--wofi-rgb-color1, 0.5);
 }
 
-/* 🔹 Text */
 #text {
     margin-left: 6px;
     color: --wofi-color7;
 }
 
-/* 🔹 Selected Text */
 #text:selected {
     color: --wofi-color0;
 }
 
-/* 🔹 Entry Icons */
 #img {
     min-width: 20px;
     min-height: 20px;

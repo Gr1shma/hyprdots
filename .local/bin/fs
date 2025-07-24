@@ -1,12 +1,20 @@
 #!/bin/bash
 
-file=$(find . -type f | dmenu -i -l 25)
+# Use wofi to select file
+file=$(find . -type f | wofi --dmenu --prompt "Select a file to upload:" --lines 25)
 
-link=$(curl -F "file=@$file" https://0x0.st)
+# Exit if no file selected
+[ -z "$file" ] && exit 1
 
+# Upload using curl
+link=$(curl -s -F "file=@$file" https://0x0.st)
+
+# Format custom link
 filename=$(basename "$file")
 custom_link="${link}/${filename}"
 
-echo -n "$custom_link" | xclip -selection c
+# Copy to clipboard using wl-copy
+echo -n "$custom_link" | wl-copy
 
-notify-send "File uploaded!"
+# Send notification
+notify-send "File uploaded!" "$custom_link"
