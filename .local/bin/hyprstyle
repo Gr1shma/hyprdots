@@ -85,10 +85,9 @@ apply_theme() {
         return 1
     fi
     
-    # Link pywal colors to wofi and waybar
-    mkdir -p "$HOME/.config/waybar" "$HOME/.config/wofi"
+    # Link pywal colors to waybar
+    mkdir -p "$HOME/.config/waybar"
     ln -sf "$HOME/.cache/wal/colors-waybar.css" "$HOME/.config/waybar/colors-waybar.css" &>/dev/null
-    ln -sf "$HOME/.cache/wal/colors.css" "$HOME/.config/wofi/colors-waybar.css" &>/dev/null
     
     # Reload Waybar (if running)
     if pgrep -x "waybar" > /dev/null 2>&1; then
@@ -98,7 +97,7 @@ apply_theme() {
         echo "Reloaded Waybar"
     fi
     
-    echo "Applied Wofi colors and reloaded Waybar"
+    echo "Applied colors and reloaded Waybar"
     apply_hyprland_borders
 }
 

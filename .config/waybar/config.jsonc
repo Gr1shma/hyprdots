@@ -30,7 +30,7 @@
         "tooltip": false
     },
     "memory": {
-        "format": " {}%"
+        "format": " {}%"
     },
     "battery": {
         "bat": "BAT1",

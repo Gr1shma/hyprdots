@@ -1,6 +1,6 @@
 #!/bin/sh
 
-emoji="$(cat "$HOME/.local/share/emoji" | wofi --dmenu -p "Select Emoji:" -l 15 | cut -d' ' -f1)"
+emoji="$(cat "$HOME/.local/share/emoji" | rofi -dmenu -p "Select Emoji:" -l 15 | cut -d' ' -f1)"
 
 [ -z "$emoji" ] && exit
 
