@@ -1,0 +1,160 @@
+#!/bin/bash
+
+BOOKMARKS_FILE="$HOME/dox/bookmarks"
+
+if [[ ! -f "$BOOKMARKS_FILE" ]]; then
+    echo "Bookmarks file not found at $BOOKMARKS_FILE"
+    echo "Please create the file with your bookmarks in the format:"
+    echo "https://example.com #tag-name"
+    echo "secretpw #description"
+    exit 1
+fi
+
+if ! command -v rofi &> /dev/null; then
+    echo "rofi is not installed. Please install rofi first:"
+    echo "Ubuntu/Debian: sudo apt install rofi"
+    echo "Arch: sudo pacman -S rofi"
+    echo "Fedora: sudo dnf install rofi"
+    exit 1
+fi
+
+if ! command -v wl-copy &> /dev/null && ! command -v xclip &> /dev/null && ! command -v xsel &> /dev/null && ! command -v pbcopy &> /dev/null; then
+    echo "No clipboard utility found. For Hyprland/Wayland, install wl-clipboard:"
+    echo "Arch: sudo pacman -S wl-clipboard"
+    echo "Ubuntu/Debian: sudo apt install wl-clipboard"
+    echo "Fedora: sudo dnf install wl-clipboard"
+    exit 1
+fi
+
+process_bookmarks() {
+    while IFS= read -r line || [[ -n "$line" ]]; do
+        [[ -z "$line" || "$line" =~ ^[[:space:]]*# ]] && continue
+        
+        if [[ "$line" =~ ^([^#]+)#(.+)$ ]]; then
+            url_or_secret="${BASH_REMATCH[1]}"
+            url_or_secret=$(echo "$url_or_secret" | sed 's/[[:space:]]*$//')
+            
+            tags_string="${BASH_REMATCH[2]}"
+            
+            tags_cleaned=$(echo "$tags_string" | sed 's/#/ /g' | sed 's/^[[:space:]]*//' | sed 's/[[:space:]]*$//' | tr -s ' ')
+            
+            echo "$tags_cleaned | $url_or_secret"
+        else
+            echo "$line | $line"
+        fi
+    done < "$BOOKMARKS_FILE"
+}
+
+is_url() {
+    [[ "$1" =~ ^https?:// ]]
+}
+
+handle_selection() {
+    local selection="$1"
+    local item="${selection#*| }"
+    
+    if is_url "$item"; then
+        echo "Opening URL: $item"
+        if command -v xdg-open &> /dev/null; then
+            xdg-open "$item" &
+        elif command -v open &> /dev/null; then  # macOS
+            open "$item" &
+        else
+            echo "Cannot open URL. Please install xdg-utils or open the URL manually: $item"
+        fi
+    else
+        echo "Copying to clipboard: $item"
+        if command -v wl-copy &> /dev/null; then
+            echo -n "$item" | wl-copy
+            echo "Copied to clipboard!"
+        elif command -v xclip &> /dev/null; then
+            echo -n "$item" | xclip -selection clipboard
+            echo "Copied to clipboard!"
+        elif command -v xsel &> /dev/null; then
+            echo -n "$item" | xsel --clipboard --input
+            echo "Copied to clipboard!"
+        elif command -v pbcopy &> /dev/null; then  # macOS
+            echo -n "$item" | pbcopy
+            echo "Copied to clipboard!"
+        else
+            echo "No clipboard utility found. Please install wl-clipboard (Wayland), xclip/xsel (X11), or use on macOS."
+            echo "Content: $item"
+        fi
+    fi
+}
+
+main() {
+    local bookmarks
+    bookmarks=$(process_bookmarks)
+    
+    if [[ -z "$bookmarks" ]]; then
+        echo "No valid bookmarks found in $BOOKMARKS_FILE"
+        exit 1
+    fi
+    
+    local selection
+    selection=$(echo "$bookmarks" | rofi -dmenu -i -p "Search bookmarks:" -format "s" -matching fuzzy)
+    
+    if [[ -n "$selection" ]]; then
+        handle_selection "$selection"
+    else
+        echo "No selection made"
+    fi
+}
+
+show_help() {
+    echo "Bookmark Manager Script"
+    echo ""
+    echo "Usage: $0 [OPTIONS]"
+    echo ""
+    echo "Options:"
+    echo "  -h, --help    Show this help message"
+    echo "  -e, --edit    Edit bookmarks file"
+    echo "  -t, --test    Test the bookmarks file format"
+    echo ""
+    echo "Bookmarks file format ($BOOKMARKS_FILE):"
+    echo "  https://youtube.com/"
+    echo "  https://mytube.com/ #mytube"
+    echo "  https://example.com #my-link"
+    echo "  secretpw #name-where-it-is-used"
+    echo ""
+    echo "URLs will be opened in your default browser."
+    echo "Non-URLs will be copied to clipboard (assumed to be secrets/passwords)."
+}
+
+case "${1:-}" in
+    -h|--help)
+        show_help
+        exit 0
+        ;;
+    -e|--edit)
+        if command -v $EDITOR &> /dev/null; then
+            $EDITOR "$BOOKMARKS_FILE"
+        elif command -v nano &> /dev/null; then
+            nano "$BOOKMARKS_FILE"
+        elif command -v vim &> /dev/null; then
+            vim "$BOOKMARKS_FILE"
+        else
+            echo "No editor found. Please set EDITOR environment variable or install nano/vim"
+        fi
+        exit 0
+        ;;
+    -t|--test)
+        echo "Testing bookmarks file format..."
+        if [[ -f "$BOOKMARKS_FILE" ]]; then
+            echo "Processed bookmarks:"
+            process_bookmarks
+        else
+            echo "Bookmarks file not found at $BOOKMARKS_FILE"
+        fi
+        exit 0
+        ;;
+    "")
+        main
+        ;;
+    *)
+        echo "Unknown option: $1"
+        echo "Use -h or --help for usage information"
+        exit 1
+        ;;
+esac
