@@ -36,11 +36,11 @@ alias \
 
 # yt-dlp
 alias \
-    ytbdl="youtube-dl -f bestvideo+bestaudio -o '%(title)s.%(ext)s' --external-downloader=aria2c" \
-    ytadl="youtube-dl -x -f bestaudio -o '%(title)s.%(ext)s' --external-downloader=aria2c" \
-    ytdl="youtube-dl -f best -o '%(title)s.%(ext)s' --external-downloader=aria2c" \
-    ytpdl="youtube-dl -f best -o '%(playlist_index)s. %(title)s.%(ext)s' --external-downloader=aria2c" \
-    ytapdl="youtube-dl -f bestaudio -o '%(title)s.%(ext)s' --external-downloader=aria2c"
+    ytbdl="yt-dlp -f 'bv+ba/best' -o '%(title)s.%(ext)s' --external-downloader=aria2c" \
+    ytadl="yt-dlp -x --audio-format mp3 -o '%(title)s.%(ext)s' --external-downloader=aria2c" \
+    ytdl="yt-dlp -f 'best' -o '%(title)s.%(ext)s' --external-downloader=aria2c" \
+    ytpdl="yt-dlp -f 'bv*+ba/best' -o '%(playlist_index)s. %(title)s.%(ext)s'" \
+    ytapdl="yt-dlp -x --audio-format mp3 -o '%(title)s.%(ext)s' --external-downloader=aria2c"
 
 # repo
 alias dots='/usr/bin/git --git-dir=$HOME/.dotfiles/ --work-tree=$HOME'
