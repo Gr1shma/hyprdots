@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Use wofi to select file
-file=$(find . -type f | wofi --dmenu --prompt "Select a file to upload:" --lines 25)
+file=$(find . -type f | rofi -dmenu --prompt "Select a file to upload:" --lines 25)
 
 # Exit if no file selected
 [ -z "$file" ] && exit 1

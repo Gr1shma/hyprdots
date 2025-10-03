@@ -1,27 +1,68 @@
 #!/bin/bash
+
+# Configuration
 WALLPAPER_DIR=~/pix/wallpaper
 MONITOR="eDP-1"
 WALLPAPER="$1"
 
+# Expand tilde in wallpaper directory
+WALLPAPER_DIR="${WALLPAPER_DIR/#\~/$HOME}"
+
+# Logging function
+log() {
+    echo "[$(date '+%H:%M:%S')] $1"
+}
+
 start_hyprpaper() {
     if ! pgrep -x "hyprpaper" > /dev/null 2>&1; then
-        echo "Hyprpaper is not running. Starting it..."
-        hyprpaper &>/dev/null &
-        sleep 3  # Increased sleep time for better startup
+        log "Hyprpaper is not running. Starting it..."
+        if command -v hyprpaper &> /dev/null; then
+            hyprpaper &>/dev/null &
+            sleep 3
+            # Verify it actually started
+            if ! pgrep -x "hyprpaper" > /dev/null 2>&1; then
+                log "Error: Failed to start hyprpaper"
+                exit 1
+            fi
+            log "Hyprpaper started successfully"
+        else
+            log "Error: hyprpaper command not found"
+            exit 1
+        fi
+    else
+        log "Hyprpaper is already running"
     fi
 }
 
 choose_random_wallpaper() {
-    echo "No wallpaper specified. Picking a random one from $WALLPAPER_DIR..."
-    WALLPAPER=$(find "$WALLPAPER_DIR" -type f \( -iname '*.jpg' -o -iname '*.png' -o -iname '*.jpeg' -o -iname '*.bmp' -o -iname '*.webp' \) | shuf -n 1)
-    if [[ -z "$WALLPAPER" ]]; then
-        echo "Error: No wallpapers found in $WALLPAPER_DIR"
+    log "No wallpaper specified. Picking a random one from $WALLPAPER_DIR..."
+    
+    if [[ ! -d "$WALLPAPER_DIR" ]]; then
+        log "Error: Wallpaper directory does not exist: $WALLPAPER_DIR"
         exit 1
     fi
+    
+    # Use an array to handle filenames with spaces
+    mapfile -t wallpapers < <(find "$WALLPAPER_DIR" -type f \( -iname '*.jpg' -o -iname '*.png' -o -iname '*.jpeg' -o -iname '*.bmp' -o -iname '*.webp' -o -iname '*.gif' \) 2>/dev/null)
+    
+    if [[ ${#wallpapers[@]} -eq 0 ]]; then
+        log "Error: No wallpapers found in $WALLPAPER_DIR"
+        exit 1
+    fi
+    
+    # Get random wallpaper
+    WALLPAPER="${wallpapers[RANDOM % ${#wallpapers[@]}]}"
+    log "Selected random wallpaper: $(basename "$WALLPAPER")"
 }
 
 resolve_wallpaper_path() {
     local input="$1"
+    
+    # Handle empty input
+    if [[ -z "$input" ]]; then
+        echo ""
+        return 1
+    fi
     
     # If it's already an absolute path and exists, use it
     if [[ "$input" = /* ]] && [[ -f "$input" ]]; then
@@ -29,9 +70,9 @@ resolve_wallpaper_path() {
         return 0
     fi
     
-    # If it's a relative path, try to resolve it
+    # If it's a relative path from current directory, try to resolve it
     if [[ -f "$input" ]]; then
-        echo "$(realpath "$input")"
+        realpath "$input" 2>/dev/null || echo "$input"
         return 0
     fi
     
@@ -41,100 +82,186 @@ resolve_wallpaper_path() {
         return 0
     fi
     
-    # If nothing found, return the original input (will fail later with proper error)
+    # Try with common extensions if no extension provided
+    for ext in jpg png jpeg bmp webp gif; do
+        if [[ -f "$WALLPAPER_DIR/$input.$ext" ]]; then
+            echo "$WALLPAPER_DIR/$input.$ext"
+            return 0
+        fi
+    done
+    
+    # If nothing found, return the original input
     echo "$input"
+    return 1
 }
 
 set_wallpaper() {
     local wallpaper="$1"
     
     if [[ ! -f "$wallpaper" ]]; then
-        echo "Error: file not found -> $wallpaper"
+        log "Error: Wallpaper file not found -> $wallpaper"
         exit 1
     fi
     
-    echo "Setting wallpaper: $wallpaper"
+    # Check if file is a valid image
+    if ! file "$wallpaper" | grep -qE "(image|bitmap)" 2>/dev/null; then
+        log "Warning: File may not be a valid image: $(basename "$wallpaper")"
+    fi
+    
+    log "Setting wallpaper: $(basename "$wallpaper")"
+    
+    # Check if hyprctl is available
+    if ! command -v hyprctl &> /dev/null; then
+        log "Error: hyprctl command not found"
+        exit 1
+    fi
     
     # Unload any existing wallpapers first
+    log "Unloading existing wallpapers..."
     hyprctl hyprpaper unload all &>/dev/null
     sleep 0.5
     
     # Preload the new wallpaper
+    log "Preloading wallpaper..."
     if ! hyprctl hyprpaper preload "$wallpaper" &>/dev/null; then
-        echo "Error: Failed to preload wallpaper"
-        exit 1
+        log "Error: Failed to preload wallpaper"
+        # Try once more after a brief wait
+        sleep 1
+        if ! hyprctl hyprpaper preload "$wallpaper" &>/dev/null; then
+            log "Error: Failed to preload wallpaper on retry"
+            exit 1
+        fi
     fi
     sleep 1
     
     # Set the wallpaper
+    log "Applying wallpaper to monitor $MONITOR..."
     if ! hyprctl hyprpaper wallpaper "$MONITOR,$wallpaper" &>/dev/null; then
-        echo "Error: Failed to set wallpaper"
-        exit 1
+        log "Error: Failed to set wallpaper on monitor $MONITOR"
+        # Try with a generic monitor name
+        log "Trying with generic monitor setup..."
+        if ! hyprctl hyprpaper wallpaper ",$wallpaper" &>/dev/null; then
+            log "Error: Failed to set wallpaper with generic setup"
+            exit 1
+        fi
     fi
     
-    echo "Wallpaper set successfully: $(basename "$wallpaper")"
+    log "Wallpaper set successfully: $(basename "$wallpaper")"
 }
 
 apply_theme() {
     local wallpaper="$1"
-    echo "Applying theme based on $(basename "$wallpaper")..."
+    log "Applying theme based on $(basename "$wallpaper")..."
+    
+    # Check if wal is available
+    if ! command -v wal &> /dev/null; then
+        log "Warning: 'wal' (pywal) not found. Skipping theme generation."
+        return 0
+    fi
     
     # Generate colors with wal
+    log "Generating color palette with pywal..."
     if ! wal -i "$wallpaper" --saturate 0.7 &>/dev/null; then
-        echo "Error: Failed to generate colors with wal"
+        log "Error: Failed to generate colors with wal"
         return 1
     fi
     
     # Link pywal colors to waybar
-    mkdir -p "$HOME/.config/waybar"
-    ln -sf "$HOME/.cache/wal/colors-waybar.css" "$HOME/.config/waybar/colors-waybar.css" &>/dev/null
+    local waybar_config="$HOME/.config/waybar"
+    if [[ -f "$HOME/.cache/wal/colors-waybar.css" ]]; then
+        mkdir -p "$waybar_config"
+        ln -sf "$HOME/.cache/wal/colors-waybar.css" "$waybar_config/colors-waybar.css" &>/dev/null
+        log "Linked pywal colors to Waybar"
+    fi
     
     # Reload Waybar (if running)
     if pgrep -x "waybar" > /dev/null 2>&1; then
+        log "Reloading Waybar..."
         pkill waybar &>/dev/null
         sleep 1
-        waybar &>/dev/null &
-        echo "Reloaded Waybar"
+        if command -v waybar &> /dev/null; then
+            waybar &>/dev/null &
+            log "Waybar reloaded"
+        else
+            log "Warning: waybar command not found"
+        fi
+    else
+        log "Waybar is not running, skipping reload"
     fi
     
-    echo "Applied colors and reloaded Waybar"
+    log "Theme colors applied"
     apply_hyprland_borders
 }
 
 apply_hyprland_borders() {
-    if [[ -f "$HOME/.cache/wal/colors.json" ]]; then
-        # Check if jq is available
-        if ! command -v jq &> /dev/null; then
-            echo "Warning: jq not found. Cannot set Hyprland border colors."
-            return 1
-        fi
-        
-        color1=$(jq -r '.colors.color1' "$HOME/.cache/wal/colors.json")
-        color2=$(jq -r '.colors.color2' "$HOME/.cache/wal/colors.json")
-        inactive=$(jq -r '.colors.color0' "$HOME/.cache/wal/colors.json")
-        
-        echo "Setting Hyprland border colors..."
-        # Apply gradient for active border
-        hyprctl keyword general:col.active_border "rgba(${color1:1}ee) rgba(${color2:1}ee) 45deg" &>/dev/null
-        # Apply solid inactive border
-        hyprctl keyword general:col.inactive_border "rgba(${inactive:1}aa)" &>/dev/null
-        echo "Hyprland border colors applied"
+    local colors_file="$HOME/.cache/wal/colors.json"
+    
+    if [[ ! -f "$colors_file" ]]; then
+        log "Warning: colors.json not found. Cannot set Hyprland border colors."
+        return 1
+    fi
+    
+    # Check if jq is available
+    if ! command -v jq &> /dev/null; then
+        log "Warning: jq not found. Cannot set Hyprland border colors."
+        return 1
+    fi
+    
+    # Extract colors with error checking
+    local color1 color2 inactive
+    color1=$(jq -r '.colors.color1 // empty' "$colors_file" 2>/dev/null)
+    color2=$(jq -r '.colors.color2 // empty' "$colors_file" 2>/dev/null)
+    inactive=$(jq -r '.colors.color0 // empty' "$colors_file" 2>/dev/null)
+    
+    if [[ -z "$color1" || -z "$color2" || -z "$inactive" ]]; then
+        log "Warning: Could not extract colors from colors.json"
+        return 1
+    fi
+    
+    log "Setting Hyprland border colors..."
+    
+    # Remove # from color codes and validate format
+    color1="${color1#\#}"
+    color2="${color2#\#}"
+    inactive="${inactive#\#}"
+    
+    # Validate hex colors (basic check)
+    if [[ ! "$color1" =~ ^[0-9a-fA-F]{6}$ ]] || [[ ! "$color2" =~ ^[0-9a-fA-F]{6}$ ]] || [[ ! "$inactive" =~ ^[0-9a-fA-F]{6}$ ]]; then
+        log "Warning: Invalid color format detected"
+        return 1
+    fi
+    
+    # Apply border colors
+    if hyprctl keyword general:col.active_border "rgba(${color1}ee) rgba(${color2}ee) 45deg" &>/dev/null && \
+       hyprctl keyword general:col.inactive_border "rgba(${inactive}aa)" &>/dev/null; then
+        log "Hyprland border colors applied successfully"
     else
-        echo "Error: colors.json not found. Can't set Hyprland border colors."
+        log "Warning: Failed to apply Hyprland border colors"
+        return 1
     fi
 }
 
+# Signal handling for clean exit
+trap 'log "Script interrupted"; exit 1' INT TERM
+
 # Main execution
+log "Starting wallpaper setup script..."
+
+# Handle wallpaper selection
 if [[ -z "$WALLPAPER" ]]; then
     choose_random_wallpaper
 else
-    # Resolve the wallpaper path
-    WALLPAPER=$(resolve_wallpaper_path "$WALLPAPER")
-    echo "Resolved wallpaper path: $WALLPAPER"
+    log "Resolving wallpaper path for: $WALLPAPER"
+    if ! WALLPAPER=$(resolve_wallpaper_path "$WALLPAPER"); then
+        log "Error: Could not resolve wallpaper path: $1"
+        log "Make sure the file exists or try using an absolute path"
+        exit 1
+    fi
+    log "Resolved wallpaper path: $WALLPAPER"
     
     if [[ ! -f "$WALLPAPER" ]]; then
-        echo "Error: file not found -> $WALLPAPER"
-        echo "Make sure the file exists or try using an absolute path"
+        log "Error: Wallpaper file not found -> $WALLPAPER"
+        log "Please check the file path and try again"
         exit 1
     fi
 fi
@@ -148,4 +275,4 @@ set_wallpaper "$WALLPAPER"
 # Apply the theme
 apply_theme "$WALLPAPER"
 
-echo "Wallpaper and theme setup complete!"
+log "Wallpaper and theme setup completed successfully!"
