@@ -1,0 +1,9 @@
+[opener]
+opencbz = [
+	{ run = 'xdg-open "$@"', desc = "Open *.cbz" },
+]
+
+[open]
+prepend_rules = [
+	{ name = "*.cbz", use = "opencbz" },
+]

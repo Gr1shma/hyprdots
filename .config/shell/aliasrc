@@ -16,14 +16,12 @@ se() {
 # program
 alias \
     z='zathura' \
-    m='mupdf' \
     t='tmux' \
     y='yazi' \
-    sdn="shutdown -h now" \
     e="$EDITOR" \
     v="$EDITOR" \
     p="paru" \
-    pu="paru -Syu" \
+    pu="paru -Syu --noconfirm" \
 
 # Colorize commands when possible.
 alias \
@@ -54,3 +52,7 @@ alias \
     mnt='udisksctl mount -b /dev/sda2' \
     unmnt='udisksctl unmount -b /dev/sda2' \
     hdfix='sudo ntfsfix -d /dev/sda2'
+
+# help
+alias \
+    fspace='df -h / | tail -n 1 | awk "{print \$4}"'
