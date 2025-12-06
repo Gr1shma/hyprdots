@@ -19,7 +19,7 @@ autoload -U compinit
 zstyle ':completion:*' menu select
 zmodload zsh/complist
 compinit
-_comp_options+=(globdots)		# Include hidden files.
+_comp_options+=(globdots) # Include hidden files.
 
 # vi mode
 bindkey -v
@@ -37,7 +37,8 @@ bindkey -s '^f' 'tmux-sessionizer\n'
 bindkey '^[[P' delete-char
 
 # Edit line in vim with ctrl-e:
-autoload edit-command-line; zle -N edit-command-line
+autoload edit-command-line
+zle -N edit-command-line
 bindkey '^e' edit-command-line
 bindkey -M vicmd '^[[P' vi-delete-char
 bindkey -M vicmd '^e' edit-command-line
@@ -54,12 +55,12 @@ declare -A pomo_options
 pomo_options["work"]="60"
 pomo_options["break"]="10"
 
-pomodoro () {
-  if [ -n "$1" -a -n "${pomo_options["$1"]}" ]; then
-  val=$1
-  echo $val 
-  timer ${pomo_options["$val"]}m
-  fi
+pomodoro() {
+	if [ -n "$1" -a -n "${pomo_options["$1"]}" ]; then
+		val=$1
+		echo $val
+		timer ${pomo_options["$val"]}m
+	fi
 }
 
 alias wo="pomodoro 'work'"

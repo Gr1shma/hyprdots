@@ -13,6 +13,13 @@ window#waybar {
     padding: 2px;
 }
 
+.modules-right {
+    background: @background;
+    border-radius: 2px;
+    margin: 2px;
+    padding: 2px;
+}
+
 #workspaces,
 #pulseaudio,
 #cpu,
@@ -26,19 +33,19 @@ window#waybar {
     color: @foreground;
     padding: 2px 6px;
     margin: 2px;
-    border-radius: 5px;
+    border-radius: 2px;
 }
 
 #workspaces {
-    padding: 2px 4px;
+    padding: 2px 2px;
 }
 
 #workspaces button {
     background: @color0;
     color: @foreground;
-    padding: 2px 5px;
+    padding: 2px 4px;
     margin: 2px;
-    border-radius: 4px;
+    border-radius: 1px;
 }
 
 #workspaces button.occupied {
@@ -62,6 +69,6 @@ window#waybar {
 }
 
 #workspaces button.visible {
-    background: @color14;
+    background: @foreground;
     color: @background;
 }

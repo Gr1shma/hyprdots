@@ -1,18 +1,41 @@
-#!/bin/bash
+#!/usr/bin/env zsh
 
-rs="$(find /home/grishma/dox/abstract -follow -printf "%T@ %Tc %p\n" | sort -n -r | cut -c84- | grep -E '.md$' | grep -v 'template')"
-rcv=$(echo "$rs" | rofi -dmenu -i)
-if [[ "$rcv" == "" ]]; then exit 1; fi
-if [[ $(echo "$rs" | grep "$rcv") ]]; then
-    note_file="~/dox/abstract/$rcv"
-    note_file=$(eval echo "$note_file")
-    echo $note_file
-    foot -t "$rcv" -e nvim -c ":ZenMode" +'q' $note_file
-else
-    if [[ $(echo "$rcv" | grep -v -E ".md$") ]]; then
-        rcv="$rcv.md"
-    fi
-    note_file="~/dox/abstract/$rcv"
-    note_file=$(eval echo "$note_file")
-    foot -t "$rcv" -e nvim -c ":ZenMode" +'q' $note_file
+NOTES_DIR="$HOME/dox/abstract"
+
+notes=$(find "$NOTES_DIR" -type f -name "*.md" ! -name "*template*" -printf "%P\n" | sort)
+
+selected=$(printf "[Create New Note]\n%s" "$notes" | fzf --prompt="Select note: ")
+
+if [[ -z $selected ]]; then
+	exit 0
 fi
+
+if [[ $selected == "[Create New Note]" ]]; then
+	echo -n "Enter note name (use / for folders): "
+	read note_name
+
+	if [[ -z $note_name ]]; then
+		echo "No name provided. Exiting."
+		exit 1
+	fi
+
+	if [[ ! $note_name =~ \.md$ ]]; then
+		note_name="${note_name}.md"
+	fi
+
+	note_file="$NOTES_DIR/$note_name"
+
+	note_dir=$(dirname "$note_file")
+	if [[ ! -d $note_dir ]]; then
+		mkdir -p "$note_dir"
+	fi
+else
+	note_file="$NOTES_DIR/$selected"
+
+	if [[ ! -f $note_file ]]; then
+		echo "File not found: $note_file"
+		exit 1
+	fi
+fi
+
+nvim "$note_file"

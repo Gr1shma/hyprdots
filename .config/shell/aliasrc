@@ -4,9 +4,10 @@
 [ -x "$(command -v nvim)" ] && alias vim="nvim" vimdiff="nvim -d"
 
 # sudo not required for some system commands
-for command in mount umount sv pacman updatedb su shutdown poweroff reboot docker ; do
+for command in mount umount sv pacman updatedb su shutdown poweroff reboot docker; do
     alias $command="sudo $command"
-done; unset command
+done
+unset command
 
 se() {
     choice="$(find ~/.local/bin -mindepth 1 -printf '%P\n' | fzf)"
@@ -22,15 +23,16 @@ alias \
     v="$EDITOR" \
     p="paru" \
     pu="paru -Syu --noconfirm" \
+    sn="search_notes"
 
 # Colorize commands when possible.
 alias \
-	ls="ls -hN --color=auto --group-directories-first" \
-	grep="grep --color=auto" \
-	diff="diff --color=auto" \
-	ip="ip -color=auto" \
+    ls="ls -hN --color=auto --group-directories-first" \
+    grep="grep --color=auto" \
+    diff="diff --color=auto" \
+    ip="ip -color=auto" \
     l="ls -lah" \
-    sz="setsid -f zathura" \
+    sz="setsid -f zathura"
 
 # yt-dlp
 alias \
