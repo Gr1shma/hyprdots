@@ -57,4 +57,5 @@ alias \
 
 # help
 alias \
-    fspace='df -h / | tail -n 1 | awk "{print \$4}"'
+    fspace='df -h / | tail -n 1 | awk "{print \$4}"' \
+    alias pkgdep='pacman -Qi | sed '\''/^Depends On/,/^Required By/{ s/^Required By.*$//; H; d }; /^Name/!d; /^Name/{ n;x;}'\'' | sed '\''/^$/s//==================================================================================/'\'''

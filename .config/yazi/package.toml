@@ -1,9 +1,14 @@
 [[plugin.deps]]
 use = "yazi-rs/plugins:smart-enter"
-rev = "8f1d971"
+rev = "4e55902"
 hash = "56fdabc96fc1f4d53c96eb884b02a5be"
 
 [[flavor.deps]]
 use = "bennyyip/gruvbox-dark"
 rev = "e5e1aef"
 hash = "eb88137cf13a796225254344bf6def2c"
+
+[[flavor.deps]]
+use = "dangooddd/kanagawa"
+rev = "04985d1"
+hash = "c69a63981e254a3a06a11c2bf0e6af1d"
