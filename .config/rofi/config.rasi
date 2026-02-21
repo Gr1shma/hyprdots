@@ -1,4 +1,4 @@
-@theme "/usr/share/rofi/themes/gruvbox-dark-hard.rasi"
+@theme "/home/grishma/.config/rofi/colors-pywal.rasi"
 
 configuration {
     font: "JetBrains Mono 12";
