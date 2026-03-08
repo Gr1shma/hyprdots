@@ -1,7 +1,68 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
-emoji="$(cat "$HOME/.local/share/emoji" | rofi -dmenu -p "Select Emoji:" -l 15 | cut -d' ' -f1)"
+DB_LOCATION="${XDG_DATA_HOME:-$HOME/.local/share}/emoji"
+HISTORY_FILE="${XDG_STATE_HOME:-$HOME/.local/state}/emoji-history.txt"
 
-[ -z "$emoji" ] && exit
+download_emojis() {
+    mkdir -p "$DB_LOCATION"
+    curl -sSL "https://unicode.org/Public/emoji/16.0/emoji-test.txt" |
+        sed -ne 's/^.*; fully-qualified.*# \(\S*\) \S* \(.*$\)/\1 \2/gp' \
+            >"$DB_LOCATION/emojis.txt"
+}
 
-echo -n "$emoji" | wl-copy
+gather_emojis() {
+    [[ ! -d "$DB_LOCATION" || -z "$(ls "$DB_LOCATION"/*.txt 2>/dev/null)" ]] && download_emojis
+    local recent=""
+    if [[ -f "$HISTORY_FILE" ]]; then
+        recent=$(sort "$HISTORY_FILE" | uniq -c | sort -k1rn | sed 's/^\s*//' | cut -d' ' -f2-)
+    fi
+    printf "%s\n%s" "$recent" "$(cat "$DB_LOCATION"/*.txt)" | cat -n | sort -uk2 | sort -n | cut -f2-
+}
+
+add_to_history() {
+    [[ -z "$1" ]] && return
+    mkdir -p "$(dirname "$HISTORY_FILE")"
+    echo "$1" >>"$HISTORY_FILE"
+}
+
+pick_emoji() {
+    gather_emojis | fzf --reverse --no-scrollbar --padding 1,3 --prompt 'Emoji: '
+}
+
+usage() {
+    echo "Usage: $(basename "$0") [-c] [-t] [-e] [-D] [-h]"
+    echo "  -c  Copy to clipboard (default)"
+    echo "  -t  Type the emoji"
+    echo "  -e  Echo the emoji"
+    echo "  -D  Download emoji database"
+    echo "  -h  Show help"
+    exit "${1:-0}"
+}
+
+cmds=()
+
+while getopts "cteDh" arg; do
+    case "$arg" in
+    c) cmds+=("clip") ;;
+    t) cmds+=("type") ;;
+    e) cmds+=("echo") ;;
+    D) download_emojis && exit 0 ;;
+    h) usage 0 ;;
+    *) usage 1 ;;
+    esac
+done
+
+[[ ${#cmds[@]} -eq 0 ]] && cmds+=("clip")
+
+result=$(pick_emoji | grep -o '^\S\+' | tr -d '\n')
+[[ -z "$result" ]] && exit 0
+
+add_to_history "$result"
+
+for cmd in "${cmds[@]}"; do
+    case "$cmd" in
+    clip) printf "%s" "$result" | wl-copy ;;
+    type) wtype -s 30 "$result" ;;
+    echo) printf "%s\n" "$result" ;;
+    esac
+done

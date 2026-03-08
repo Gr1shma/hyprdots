@@ -1,20 +1,13 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-# Use wofi to select file
-file=$(find . -type f | rofi -dmenu --prompt "Select a file to upload:" --lines 25)
+file=$(find . -type f | fzf --reverse --no-scrollbar --padding 1,3 --prompt 'Upload: ')
 
-# Exit if no file selected
-[ -z "$file" ] && exit 1
+[[ -z "$file" ]] && exit 0
 
-# Upload using curl
 link=$(curl -s -F "file=@$file" https://0x0.st)
 
-# Format custom link
 filename=$(basename "$file")
 custom_link="${link}/${filename}"
 
-# Copy to clipboard using wl-copy
 echo -n "$custom_link" | wl-copy
-
-# Send notification
 notify-send "File uploaded!" "$custom_link"

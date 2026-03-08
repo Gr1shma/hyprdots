@@ -59,12 +59,13 @@
         "format-ethernet": " ",
         "format-linked": " {ifname} (No IP)",
         "format-disconnected": " ",
-        "tooltip": false
+        "tooltip": false,
+        "on-click": "foot --app-id floating-term -e wifimenu",
     },
     "pulseaudio": {
         "format": " {volume}%",
-        "on-click": "foot -T pulsemixer zsh -ic pulsemixer",
-        "scroll-step": 5
+        "scroll-step": 5,
+        "on-click": "foot --app-id floating-term -e pulsemixer",
     },
     "backlight": {
         "device": "intel_backlight",

@@ -1,14 +1,11 @@
 #!/bin/bash
 
-# Configuration
 WALLPAPER_DIR=~/pix/wallpaper
 MONITOR="eDP-1"
 WALLPAPER="$1"
 
-# Expand tilde in wallpaper directory
 WALLPAPER_DIR="${WALLPAPER_DIR/#\~/$HOME}"
 
-# Logging function
 log() {
     echo "[$(date '+%H:%M:%S')] $1"
 }
@@ -17,7 +14,6 @@ start_hyprpaper() {
     if ! pgrep -x "hyprpaper" >/dev/null 2>&1; then
         log "Hyprpaper is not running. Waiting for it to start..."
 
-        # Wait up to 10 seconds for hyprpaper to start
         for i in {1..10}; do
             sleep 1
             if pgrep -x "hyprpaper" >/dev/null 2>&1; then
@@ -52,7 +48,6 @@ choose_random_wallpaper() {
         exit 1
     fi
 
-    # Use an array to handle filenames with spaces
     mapfile -t wallpapers < <(find "$WALLPAPER_DIR" -type f \( -iname '*.jpg' -o -iname '*.png' -o -iname '*.jpeg' -o -iname '*.bmp' -o -iname '*.webp' -o -iname '*.gif' \) 2>/dev/null)
 
     if [[ ${#wallpapers[@]} -eq 0 ]]; then
@@ -60,7 +55,6 @@ choose_random_wallpaper() {
         exit 1
     fi
 
-    # Get random wallpaper
     WALLPAPER="${wallpapers[RANDOM % ${#wallpapers[@]}]}"
     log "Selected random wallpaper: $(basename "$WALLPAPER")"
 }
@@ -68,31 +62,26 @@ choose_random_wallpaper() {
 resolve_wallpaper_path() {
     local input="$1"
 
-    # Handle empty input
     if [[ -z $input ]]; then
         echo ""
         return 1
     fi
 
-    # If it's already an absolute path and exists, use it
     if [[ $input == /* ]] && [[ -f $input ]]; then
         echo "$input"
         return 0
     fi
 
-    # If it's a relative path from current directory, try to resolve it
     if [[ -f $input ]]; then
         realpath "$input" 2>/dev/null || echo "$input"
         return 0
     fi
 
-    # Try looking in the wallpaper directory
     if [[ -f "$WALLPAPER_DIR/$input" ]]; then
         echo "$WALLPAPER_DIR/$input"
         return 0
     fi
 
-    # Try with common extensions if no extension provided
     for ext in jpg png jpeg bmp webp gif; do
         if [[ -f "$WALLPAPER_DIR/$input.$ext" ]]; then
             echo "$WALLPAPER_DIR/$input.$ext"
@@ -100,7 +89,6 @@ resolve_wallpaper_path() {
         fi
     done
 
-    # If nothing found, return the original input
     echo "$input"
     return 1
 }
@@ -115,7 +103,6 @@ set_wallpaper() {
 
     log "Applying wallpaper to monitor $MONITOR..."
 
-    # Directly set wallpaper (hyprpaper handles loading internally)
     if ! hyprctl hyprpaper wallpaper "$MONITOR,$wallpaper,cover"; then
         log "Warning: Failed for $MONITOR, trying fallback"
         if ! hyprctl hyprpaper wallpaper ",$wallpaper,cover"; then
@@ -272,20 +259,17 @@ apply_theme() {
     local wallpaper="$1"
     log "Applying theme based on $(basename "$wallpaper")..."
 
-    # Check if wal is available
     if ! command -v wal &>/dev/null; then
         log "Warning: 'wal' (pywal) not found. Skipping theme generation."
         return 0
     fi
 
-    # Generate colors with wal
     log "Generating color palette with pywal..."
     if ! wal -i "$wallpaper" --saturate 0.7 &>/dev/null; then
         log "Error: Failed to generate colors with wal"
         return 1
     fi
 
-    # Link pywal colors to waybar
     local waybar_config="$HOME/.config/waybar"
     if [[ -f "$HOME/.cache/wal/colors-waybar.css" ]]; then
         mkdir -p "$waybar_config"
@@ -293,7 +277,6 @@ apply_theme() {
         log "Linked pywal colors to Waybar"
     fi
 
-    # Reload Waybar (if running)
     if pgrep -x "waybar" >/dev/null 2>&1; then
         log "Reloading Waybar..."
         pkill waybar &>/dev/null
@@ -310,7 +293,6 @@ apply_theme() {
 
     log "Theme colors applied"
     apply_hyprland_borders
-    apply_rofi_theme
     apply_rmpc_theme
 }
 
@@ -322,13 +304,11 @@ apply_hyprland_borders() {
         return 1
     fi
 
-    # Check if jq is available
     if ! command -v jq &>/dev/null; then
         log "Warning: jq not found. Cannot set Hyprland border colors."
         return 1
     fi
 
-    # Extract colors with error checking
     local color1 color2 inactive
     color1=$(jq -r '.colors.color1 // empty' "$colors_file" 2>/dev/null)
     color2=$(jq -r '.colors.color2 // empty' "$colors_file" 2>/dev/null)
@@ -341,18 +321,15 @@ apply_hyprland_borders() {
 
     log "Setting Hyprland border colors..."
 
-    # Remove # from color codes and validate format
     color1="${color1#\#}"
     color2="${color2#\#}"
     inactive="${inactive#\#}"
 
-    # Validate hex colors (basic check)
     if [[ ! $color1 =~ ^[0-9a-fA-F]{6}$ ]] || [[ ! $color2 =~ ^[0-9a-fA-F]{6}$ ]] || [[ ! $inactive =~ ^[0-9a-fA-F]{6}$ ]]; then
         log "Warning: Invalid color format detected"
         return 1
     fi
 
-    # Apply border colors
     if hyprctl keyword general:col.active_border "rgba(${color1}ee) rgba(${color2}ee) 45deg" &>/dev/null &&
         hyprctl keyword general:col.inactive_border "rgba(${inactive}aa)" &>/dev/null; then
         log "Hyprland border colors applied successfully"
@@ -362,162 +339,10 @@ apply_hyprland_borders() {
     fi
 }
 
-apply_rofi_theme() {
-    local colors_file="$HOME/.cache/wal/colors.json"
-    local rofi_config_dir="$HOME/.config/rofi"
-    local rofi_theme="$rofi_config_dir/colors-pywal.rasi"
-
-    if [[ ! -f $colors_file ]]; then
-        log "Warning: colors.json not found. Cannot generate Rofi theme."
-        return 1
-    fi
-
-    # Check if jq is available
-    if ! command -v jq &>/dev/null; then
-        log "Warning: jq not found. Cannot generate Rofi theme."
-        return 1
-    fi
-
-    log "Generating minimalist Rofi theme from pywal colors..."
-
-    # Create rofi config directory if it doesn't exist
-    mkdir -p "$rofi_config_dir"
-
-    # Extract colors from wal
-    local bg=$(jq -r '.special.background // empty' "$colors_file" 2>/dev/null)
-    local fg=$(jq -r '.special.foreground // empty' "$colors_file" 2>/dev/null)
-    local c0=$(jq -r '.colors.color0 // empty' "$colors_file" 2>/dev/null)
-    local c4=$(jq -r '.colors.color4 // empty' "$colors_file" 2>/dev/null)
-    local c8=$(jq -r '.colors.color8 // empty' "$colors_file" 2>/dev/null)
-
-    # Validate colors
-    if [[ -z $bg || -z $fg ]]; then
-        log "Warning: Could not extract colors from colors.json"
-        return 1
-    fi
-
-    # Generate minimalist block-style Rofi theme
-    cat >"$rofi_theme" <<EOF
-* {
-    background:     ${bg};
-    background-alt: ${c0};
-    foreground:     ${fg};
-    selected:       ${c4};
-    border:         ${c8};
-    
-    background-color: transparent;
-    text-color: @foreground;
-    font: "JetBrains Mono 11";
-}
-
-window {
-    background-color: @background;
-    border: 1px;
-    border-color: @border;
-    padding: 0px;
-    width: 600px;
-}
-
-mainbox {
-    background-color: transparent;
-    children: [ inputbar, listview ];
-    spacing: 0px;
-    padding: 0px;
-}
-
-inputbar {
-    background-color: @background-alt;
-    children: [ prompt, entry ];
-    padding: 12px;
-    spacing: 8px;
-}
-
-prompt {
-    background-color: transparent;
-    text-color: @selected;
-    padding: 0px;
-}
-
-entry {
-    background-color: transparent;
-    text-color: @foreground;
-    placeholder: "";
-}
-
-listview {
-    background-color: transparent;
-    scrollbar: false;
-    spacing: 0px;
-    lines: 8;
-    padding: 0px;
-}
-
-element {
-    background-color: transparent;
-    text-color: @foreground;
-    padding: 5px;
-    spacing: 0px;
-}
-
-element selected {
-    background-color: @selected;
-    text-color: @background;
-}
-
-element-text {
-    background-color: transparent;
-    text-color: inherit;
-}
-EOF
-
-    if [[ $? -eq 0 ]]; then
-        log "Rofi theme generated successfully at $rofi_theme"
-
-        # Update Rofi config to use the new theme
-        local rofi_config="$rofi_config_dir/config.rasi"
-
-        # Check if config exists and update it, or create a new one
-        if [[ -f $rofi_config ]]; then
-            # Check if @theme directive exists
-            if grep -q "^@theme" "$rofi_config"; then
-                # Replace existing theme
-                sed -i "s|^@theme.*|@theme \"$rofi_theme\"|" "$rofi_config"
-                log "Updated Rofi config to use pywal theme"
-            else
-                # Add theme directive at the top
-                sed -i "1i@theme \"$rofi_theme\"" "$rofi_config"
-                log "Added pywal theme to Rofi config"
-            fi
-        else
-            # Create new config with theme
-            cat >"$rofi_config" <<EOF
-@theme "$rofi_theme"
-configuration {
-    font: "JetBrains Mono 11";
-    show-icons: false;
-    display-drun: "";
-    display-run: "";
-    display-window: "";
-    drun-display-format: "{name}";
-}
-EOF
-            log "Created new Rofi config with pywal theme"
-        fi
-
-        return 0
-    else
-        log "Error: Failed to generate Rofi theme"
-        return 1
-    fi
-}
-
-# Signal handling for clean exit
 trap 'log "Script interrupted"; exit 1' INT TERM
 
-# Main execution
 log "Starting wallpaper setup script..."
 
-# Handle wallpaper selection
 if [[ -z $WALLPAPER ]]; then
     choose_random_wallpaper
 else
@@ -536,13 +361,10 @@ else
     fi
 fi
 
-# Ensure hyprpaper is running
 start_hyprpaper
 
-# Set the wallpaper
 set_wallpaper "$WALLPAPER"
 
-# Apply the theme
 apply_theme "$WALLPAPER"
 
 log "Wallpaper and theme setup completed successfully!"

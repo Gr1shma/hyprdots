@@ -33,6 +33,7 @@ bindkey -M menuselect 'j' vi-down-line-or-history
 bindkey -v '^?' backward-delete-char
 
 bindkey -s '^f' 'tmux-sessionizer\n'
+bindkey -s '^n' 'search_notes\n'
 
 bindkey '^[[P' delete-char
 
@@ -50,3 +51,7 @@ source /usr/share/zsh/plugins/fast-syntax-highlighting/fast-syntax-highlighting.
 
 # bun completions
 [ -s "/home/grishma/.bun/_bun" ] && source "/home/grishma/.bun/_bun"
+
+# for dots
+alias dots='/usr/bin/git --git-dir=$HOME/.dotfiles/ --work-tree=$HOME'
+compdef dots=git
