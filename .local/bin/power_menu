@@ -2,19 +2,14 @@
 
 op=$(printf ' Poweroff\n Reboot\n Lock\n Logout' |
     fzf --reverse --no-scrollbar --padding 1,3 --prompt 'Power Menu: ' |
-    awk '{print tolower($2)}')
+    sed 's/^[^ ]* //' |
+    tr '[:upper:]' '[:lower:]')
 
 [[ -z "$op" ]] && exit 0
 
 case $op in
 poweroff) systemctl poweroff ;;
 reboot) systemctl reboot ;;
-lock)
-    (
-        sleep 0.5s
-        hyprlock
-    ) &
-    disown
-    ;;
+lock) hyprctl dispatch exec hyprlock ;;
 logout) hyprctl dispatch exit ;;
 esac

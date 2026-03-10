@@ -80,42 +80,10 @@ cmd = "fsel --cclip"
 with_argument = false
 
 [[modules]]
-description = "find pkgs"
-prefix = "pm"
-cmd = "paru -SD {}"
-with_argument = true
-
-[[modules]]
 description = "install pkgs"
 prefix = "i"
 cmd = "paru -S {}"
 with_argument = true
-
-[[modules]]
-description = "power menu with fzf"
-prefix = "p"
-cmd = "power_menu"
-with_argument = false
-
-[[modules]]
-description = "run command in terminal"
-prefix = "s"
-cmd = "setsid -f foot -e {}"
-with_argument = true
-
-[[modules]]
-description = "search archwiki"
-prefix = "w"
-cmd = "xdg-open 'https://wiki.archlinux.org/index.php?search={}'"
-with_argument = true
-url_encode = true
-
-[[modules]]
-description = "cambridge dictionary"
-prefix = "dc"
-cmd = "xdg-open 'https://dictionary.cambridge.org/dictionary/english/{}'"
-with_argument = true
-url_encode = true
 
 [[modules]]
 description = "search notes"
@@ -124,13 +92,37 @@ cmd = "search_notes"
 with_argument = false
 
 [[modules]]
-description = "wifi manager"
-prefix = "wi"
-cmd = "wifimenu"
-with_argument = false
-
-[[modules]]
 description = "bookmarks"
 prefix = "bm"
 cmd = "bookmark"
+with_argument = false
+
+[[modules]]
+description = "queue playlist"
+prefix = "ml"
+cmd = "find ~/music/playlists -name '*.m3u' -o -name '*.pls' | sed 's|.*/||;s|\\.[^.]*$||' | fzf --reverse --no-scrollbar --padding 1,3 --prompt 'Playlist: ' | xargs -I{} mpc load {}"
+with_argument = false
+
+[[modules]]
+description = "search and play song"
+prefix = "ms"
+cmd = "mpc-search"
+with_argument = false
+
+[[modules]]
+description = "play/pause"
+prefix = "pp"
+cmd = "mpc toggle"
+with_argument = false
+
+[[modules]]
+description = "next track"
+prefix = "mn"
+cmd = "mpc next"
+with_argument = false
+
+[[modules]]
+description = "prev track"
+prefix = "mp"
+cmd = "mpc prev"
 with_argument = false
