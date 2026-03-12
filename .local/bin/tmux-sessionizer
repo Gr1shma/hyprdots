@@ -12,15 +12,12 @@ else
     base_results=$(fd --type d --max-depth 1 --hidden \
         --exclude '.*' \
         . ~/code/ ~/sem/ ~/ ~/personal ~/projects ~/.local/src/ 2>/dev/null)
-
     additional_results=$(printf '%s\n' "${additional_locations[@]}")
-
-    selected=$(printf '%s\n%s' "$base_results" "$additional_results" | fzf)
+    selected=$(printf '%s\n%s' "$base_results" "$additional_results" |
+        fzf --reverse --no-scrollbar --padding 1,3 --prompt 'Sessions: ')
 fi
 
-if [[ -z $selected ]]; then
-    exit 0
-fi
+[[ -z $selected ]] && exit 0
 
 selected_name=$(basename "$selected" | tr ":,. " "____")
 tmux_running=$(pgrep tmux)

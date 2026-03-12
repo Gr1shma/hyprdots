@@ -53,5 +53,4 @@ source /usr/share/zsh/plugins/fast-syntax-highlighting/fast-syntax-highlighting.
 [ -s "/home/grishma/.bun/_bun" ] && source "/home/grishma/.bun/_bun"
 
 # for dots
-alias dots='/usr/bin/git --git-dir=$HOME/.dotfiles/ --work-tree=$HOME'
 compdef dots=git
