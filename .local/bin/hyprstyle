@@ -282,7 +282,7 @@ apply_theme() {
         pkill waybar &>/dev/null
         sleep 1
         if command -v waybar &>/dev/null; then
-            waybar &>/dev/null &
+            setsid waybar &>/dev/null &
             log "Waybar reloaded"
         else
             log "Warning: waybar command not found"

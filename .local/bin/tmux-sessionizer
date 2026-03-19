@@ -4,6 +4,7 @@ additional_locations=(
     ~/.config/hypr/
     ~/.config/nvim/
     ~/.config/foot/
+    ~/.local/bin/
 )
 
 if [[ $# -eq 1 ]]; then
