@@ -7,8 +7,8 @@ if [[ ! -d "$WALLPAPER_DIR" ]]; then
     exit 1
 fi
 
-selected=$(find "$WALLPAPER_DIR" -type f | grep -iE '\.(jpg|png|jpeg|bmp|webp|gif)$' | sort | \
-    sed "s|^$WALLPAPER_DIR/||" | \
+selected=$(find "$WALLPAPER_DIR" -type f | grep -iE '\.(jpg|png|jpeg|bmp|webp|gif)$' | sort |
+    sed "s|^$WALLPAPER_DIR/||" |
     fzf --preview "chafa -s \${FZF_PREVIEW_COLUMNS}x\${FZF_PREVIEW_LINES} '$WALLPAPER_DIR/{}'" \
         --preview-window=right:60%)
 

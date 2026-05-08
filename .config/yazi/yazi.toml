@@ -1,9 +1,9 @@
 [opener]
-opencbz = [
-	{ run = 'xdg-open "$@"', desc = "Open *.cbz" },
+cbz = [
+  { run = "zathura %s", orphan = true, for = "linux" },
 ]
 
 [open]
 prepend_rules = [
-	{ name = "*.cbz", use = "opencbz" },
+  { url = "*.cbz", use = "cbz" },
 ]

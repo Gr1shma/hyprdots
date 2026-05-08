@@ -14,7 +14,22 @@ gather_emojis() {
     [[ ! -d "$DB_LOCATION" || -z "$(ls "$DB_LOCATION"/*.txt 2>/dev/null)" ]] && download_emojis
     local recent=""
     if [[ -f "$HISTORY_FILE" ]]; then
-        recent=$(sort "$HISTORY_FILE" | uniq -c | sort -k1rn | sed 's/^\s*//' | cut -d' ' -f2-)
+        recent=$(
+            tac "$HISTORY_FILE" | awk '!seen[$0]++' |
+                while IFS= read -r entry; do
+                    [[ -z "$entry" ]] && continue
+                    if [[ "$entry" == *" "* ]]; then
+                        printf '%s\n' "$entry"
+                    else
+                        match=$(grep -m1 -F -- "$entry " "$DB_LOCATION"/*.txt 2>/dev/null)
+                        if [[ -n "$match" ]]; then
+                            printf '%s\n' "$match"
+                        else
+                            printf '%s\n' "$entry"
+                        fi
+                    fi
+                done
+        )
     fi
     printf "%s\n%s" "$recent" "$(cat "$DB_LOCATION"/*.txt)" | cat -n | sort -uk2 | sort -n | cut -f2-
 }
@@ -54,10 +69,13 @@ done
 
 [[ ${#cmds[@]} -eq 0 ]] && cmds+=("clip")
 
-result=$(pick_emoji | grep -o '^\S\+' | tr -d '\n')
+selection=$(pick_emoji)
+[[ -z "$selection" ]] && exit 0
+
+result=${selection%% *}
 [[ -z "$result" ]] && exit 0
 
-add_to_history "$result"
+add_to_history "$selection"
 
 for cmd in "${cmds[@]}"; do
     case "$cmd" in

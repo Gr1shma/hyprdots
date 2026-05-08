@@ -115,144 +115,25 @@ set_wallpaper() {
 }
 
 apply_rmpc_theme() {
-    local colors_file="$HOME/.cache/wal/colors.json"
-    local rmpc_config_dir="$HOME/.config/rmpc"
-    local rmpc_theme="$rmpc_config_dir/themes/theme.ron"
+    local generated_template="$HOME/.cache/wal/rmpc-colors.ron"
+    local rmpc_theme_dir="$HOME/.config/rmpc/themes"
+    local rmpc_theme="$rmpc_theme_dir/theme.ron"
 
-    if [[ ! -f $colors_file ]]; then
-        log "Warning: colors.json not found. Cannot generate rmpc theme."
+    if [[ ! -f $generated_template ]]; then
+        log "Warning: pywal template output not found: $generated_template"
+        log "Tip: create ~/.config/wal/templates/rmpc-colors.ron"
         return 1
     fi
 
-    if ! command -v jq &>/dev/null; then
-        log "Warning: jq not found. Cannot generate rmpc theme."
-        return 1
-    fi
+    mkdir -p "$rmpc_theme_dir"
 
-    log "Generating rmpc theme from pywal colors..."
-
-    mkdir -p "$rmpc_config_dir"
-
-    # Extract colors
-    local bg=$(jq -r '.special.background // empty' "$colors_file" 2>/dev/null)
-    local fg=$(jq -r '.special.foreground // empty' "$colors_file" 2>/dev/null)
-    local c0=$(jq -r '.colors.color0 // empty' "$colors_file" 2>/dev/null)
-    local c1=$(jq -r '.colors.color1 // empty' "$colors_file" 2>/dev/null)
-    local c2=$(jq -r '.colors.color2 // empty' "$colors_file" 2>/dev/null)
-    local c3=$(jq -r '.colors.color3 // empty' "$colors_file" 2>/dev/null)
-    local c4=$(jq -r '.colors.color4 // empty' "$colors_file" 2>/dev/null)
-    local c6=$(jq -r '.colors.color6 // empty' "$colors_file" 2>/dev/null)
-    local c8=$(jq -r '.colors.color8 // empty' "$colors_file" 2>/dev/null)
-
-    if [[ -z $bg || -z $fg ]]; then
-        log "Warning: Could not extract colors from colors.json"
-        return 1
-    fi
-
-    # Generate rmpc theme
-    cat >"$rmpc_theme" <<THEME
-#![enable(implicit_some)]
-#![enable(unwrap_newtypes)]
-#![enable(unwrap_variant_newtypes)]
-(
-    default_album_art_path: None,
-    draw_borders: false,
-    show_song_table_header: false,
-    symbols: (song: " ", dir: " ", marker: "> "),
-    layout: Split(
-        direction: Vertical,
-        panes: [
-            (
-                pane: Pane(Header),
-                size: "1",
-            ),
-            (
-                pane: Pane(TabContent),
-                size: "100%",
-            ),
-            (
-                pane: Pane(ProgressBar),
-                size: "1",
-            ),
-        ],
-    ),
-    progress_bar: (
-        symbols: ["-", ">", " "],
-        track_style: (bg: "${bg}"),
-        elapsed_style: (fg: "${c1}", bg: "${bg}"),
-        thumb_style: (fg: "${c1}", bg: "${bg}"),
-    ),
-    scrollbar: (
-        symbols: ["│", "█", "▲", "▼"],
-        track_style: (),
-        ends_style: (),
-        thumb_style: (fg: "${c4}"),
-    ),
-    browser_column_widths: [20, 38, 42],
-    text_color: "${fg}",
-    background_color: "${bg}",
-    header_background_color: "${c0}",
-    modal_background_color: None,
-    tab_bar: (active_style: (fg: "${bg}", bg: "${c1}", modifiers: "Bold"), inactive_style: ()),
-    borders_style: (fg: "${c8}"),
-    highlighted_item_style: (fg: "${c1}", modifiers: "Bold"),
-    current_item_style: (fg: "${bg}", bg: "${c4}", modifiers: "Bold"),
-    highlight_border_style: (fg: "${c4}"),
-    song_table_format: [
-        (
-            prop: (kind: Property(Artist), style: (fg: "${c4}"), default: (kind: Text("Unknown"))),
-            width: "50%",
-            alignment: Right,
-        ),
-        (
-            prop: (kind: Text("-"), style: (fg: "${c4}"), default: (kind: Text("Unknown"))),
-            width: "1",
-            alignment: Center,
-        ),
-        (
-            prop: (kind: Property(Title), style: (fg: "${c6}"), default: (kind: Text("Unknown"))),
-            width: "50%",
-        ),
-    ],
-    header: (
-        rows: [
-            (
-                left: [
-                    (kind: Text("["), style: (fg: "${c4}", modifiers: "Bold")),
-                    (kind: Property(Status(State)), style: (fg: "${c4}", modifiers: "Bold")),
-                    (kind: Text("]"), style: (fg: "${c4}", modifiers: "Bold")),
-                    (kind: Text(" ["), style: (fg: "${c4}", modifiers: "Bold")),
-                    (kind: Text("Random - "), style: (fg: "${c3}", modifiers: "Bold")),
-                    (kind: Property(Status(Random)), style: (fg: "${c3}", modifiers: "Bold")),
-                    (kind: Text("]"), style: (fg: "${c4}", modifiers: "Bold"))
-                ],
-                center: [
-                    (kind: Property(Song(Artist)), style: (fg: "${c3}", modifiers: "Bold"),
-                        default: (kind: Text("Unknown"), style: (fg: "${c3}", modifiers: "Bold"))
-                    ),
-                    (kind: Text(" - ")),
-                    (kind: Property(Song(Title)), style: (fg: "${c6}", modifiers: "Bold"),
-                        default: (kind: Text("No Song"), style: (fg: "${c6}", modifiers: "Bold"))
-                    )
-                ],
-                right: [
-                    (kind: Text("Vol: "), style: (fg: "${c4}", modifiers: "Bold")),
-                    (kind: Property(Status(Volume)), style: (fg: "${c4}", modifiers: "Bold")),
-                    (kind: Text("% "), style: (fg: "${c4}", modifiers: "Bold"))
-                ]
-            )
-        ],
-    ),
-)
-THEME
-
-    if [[ $? -eq 0 ]]; then
-        log "rmpc theme generated successfully at $rmpc_theme"
+    if cp "$generated_template" "$rmpc_theme" 2>/dev/null; then
+        log "rmpc theme updated from pywal template: $rmpc_theme"
         return 0
-    else
-        log "Error: Failed to generate rmpc theme"
-        return 1
     fi
+
+    log "Warning: Failed to copy rmpc theme template output"
+    return 1
 }
 
 apply_theme() {

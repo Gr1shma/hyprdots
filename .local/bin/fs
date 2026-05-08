@@ -1,10 +1,27 @@
 #!/usr/bin/env bash
 
-file=$(find . -type f | fzf --reverse --no-scrollbar --padding 1,3 --prompt 'Upload: ')
+directories=(
+    ~/dox/
+    ~/dl/
+    ~/pix/
+)
+
+valid_directories=()
+for dir in "${directories[@]}"; do
+    [[ -d "$dir" ]] && valid_directories+=("$dir")
+done
+
+[[ ${#valid_directories[@]} -eq 0 ]] && valid_directories=(.)
+
+file=$(find "${valid_directories[@]}" -type f | fzf --reverse --no-scrollbar --padding 1,3 --prompt 'Upload: ')
 
 [[ -z "$file" ]] && exit 0
 
 link=$(curl -s -F "file=@$file" https://0x0.st)
+[[ -z "$link" ]] && {
+    notify-send "Upload failed" "File: $file"
+    exit 1
+}
 
 filename=$(basename "$file")
 custom_link="${link}/${filename}"
