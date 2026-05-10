@@ -29,10 +29,11 @@ export PATH="$PATH:$GOPATH/bin"
 
 export PATH=$PATH:$HOME/.local/bin
 
-export QT_QPA_PLATFORMTHEME=gtk2
+export QT_QPA_PLATFORMTHEME=qt6ct
 
 [ ! -s ~/.config/mpd/pid ] && mpd
 
-if [ -z "${DISPLAY}" ] && [ "${XDG_VTNR}" -eq 1 ]; then
-    exec start-hyprland
+if [ -z "${DISPLAY:-}" ] && [ -z "${WAYLAND_DISPLAY:-}" ] && [ "${XDG_VTNR:-0}" -eq 1 ]; then
+    # exec start-hyprland
+    exec start-mango
 fi

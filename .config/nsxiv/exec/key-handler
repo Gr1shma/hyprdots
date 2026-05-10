@@ -1,8 +1,8 @@
 #!/bin/sh
 
 while read file; do
-	case "$1" in
-	"w") hyprstyle "$file" ;;
-	"d") rm "$file" ;;
-	esac
+    case "$1" in
+    "w") mangostyle "$file" ;;
+    "d") rm "$file" ;;
+    esac
 done

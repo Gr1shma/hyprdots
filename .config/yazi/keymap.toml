@@ -5,7 +5,7 @@ desc = "Enter the child directory, or open the file"
 
 [[mgr.prepend_keymap]]
 on   = "<C-w>"
-run  = 'shell "hyprstyle \"$0\"" --confirm'
+run  = 'shell "mangostyle \"$0\"" --confirm'
 desc = "Set as wallpaper"
 
 [[mgr.prepend_keymap]]

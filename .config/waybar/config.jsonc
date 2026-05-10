@@ -2,7 +2,7 @@
     "position": "top",
     "height": 32,
     "modules-left": [
-        "hyprland/workspaces"
+        "ext/workspaces",
     ],
     "modules-center": [
         "clock"
@@ -16,6 +16,12 @@
         "network",
         "tray"
     ],
+    "ext/workspaces": {
+        "format": "{icon}",
+        "ignore-hidden": true,
+        "on-click": "activate",
+        "sort-by-id": true
+    },
     "tray": {
         "spacing": 10
     },

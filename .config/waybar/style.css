@@ -45,24 +45,17 @@ window#waybar {
     margin: 2px;
 }
 
-#workspaces button.occupied {
-    background: @color9;
-    color: @foreground;
-}
-
-#workspaces button.empty {
+#workspaces button.hidden {
     background: transparent;
     color: @color8;
 }
 
-#workspaces button.focused {
-    background: @color10;
-    color: @background;
+#workspaces button.active {
+    color: @color4;
 }
 
 #workspaces button.urgent {
-    background: @color12;
-    color: @background;
+    color: @color1;
 }
 
 #workspaces button.visible {
